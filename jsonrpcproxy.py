@@ -20,13 +20,37 @@ log = logging.getLogger(__name__)
 
 
 class ServiceProxy(object):
+    """
+    Remote service proxy class.
+
+    This is main class of the package.
+    Class must be instantiated with URL of remote service (`endpoint`).
+
+    :param endpoint: an URL of the RPC-JSON service
+    """
+
     def __init__(self, endpoint):
         self.endpoint = endpoint
 
     def __getattr__(self, name):
+        """
+        Instantiate and return a :class:Method with specified `name`
+
+        :param name: name of remote method
+        """
+
         return Method(self, name)
 
     def call(self, method, params=None):
+        """
+        Call remote `method` with optional `params`
+        passed as a `dict`-like or `list`-like objects
+
+        :param method: name of a remote method or a `Method` instance
+        :param params: optional `dict`-like or `list`-like object
+                       which will be passed as an argument of the method
+        """
+
         request = {
                 'method': str(method),
                 'id': uuid.uuid4().hex,
@@ -67,11 +91,25 @@ class ServiceProxy(object):
 
 
 class Method(object):
+    """
+    Class for representation and calling a remote method
+    """
+
     def __init__(self, client, name):
         self.name = name
         self.client = client
 
     def __call__(self, *args, **kwargs):
+        """
+        Shorthand for the `ServiceProxy.call()`
+
+        :param *args: positional arguments of the remote method
+        :param **kwargs: arguments passed as a dict to the remote method
+
+        Only `*args` or `**kwargs` should be specified
+        and cannot be mixed together.
+        """
+
         if args and kwargs:
             raise ValueError('Use args or kwargs separately')
         return self.client.call(self, args or kwargs)
