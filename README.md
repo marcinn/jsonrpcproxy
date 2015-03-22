@@ -20,7 +20,7 @@ Finally I've found nothing like that, so I wrote my own.
 
 ## Example
 
-```
+```python
 import jsonrpcproxy as rpc
 
 calculator = rpc.ServiceProxy('http://example.math.server/')
