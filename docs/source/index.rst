@@ -11,8 +11,8 @@ Contents:
 .. toctree::
    :maxdepth: 1
 
-   installation
    getting-started
+   installation
    json-rpc
    module-api
 
