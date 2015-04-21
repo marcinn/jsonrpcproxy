@@ -9,19 +9,24 @@ __maintainer__ = "Marcin Nowak"
 __email__ = "marcin.j.nowak@gmail.com"
 
 
-import urllib
+import requests
 import uuid
 import json
 import logging
+from requests.exceptions import RequestException as ConnectionError
+from requests.exceptions import Timeout as TimeoutError
 
-__all__ = ['ServiceProxy']
+
+__all__ = ['ServiceProxy', 'JsonRpcError', 'HttpError', 'ConnectionError', 
+    'TimeoutError', 'Client']
 
 log = logging.getLogger(__name__)
 
 
-class ServiceProxy(object):
-    def __init__(self, endpoint):
+class Client(object):
+    def __init__(self, endpoint, timeout=10):
         self.endpoint = endpoint
+        self.timeout = timeout
 
     def __getattr__(self, name):
         return Method(self, name)
@@ -38,11 +43,11 @@ class ServiceProxy(object):
 
         log.debug('Calling %s.%s() with params: %%s' % (self.endpoint, method), params)
 
-        resp = urllib.urlopen(self.endpoint, json.dumps(request))
-        resp_data = resp.read()
+        resp = requests.post(self.endpoint, data=json.dumps(request), timeout=self.timeout)
+        resp_data = resp.text
 
-        if not resp.code == 200:
-            raise HttpError(message=resp_data, code=resp.code)
+        if not resp.status_code == 200:
+            raise HttpError(message=resp_data, code=resp.status_code)
 
         log.debug('Response data: %s', resp_data)
 
@@ -154,5 +159,8 @@ def exc_factory(code, msg=None, data=None):
             cls = UnknownServerError
     return cls(msg,data=data)
 
+
+
+ServiceProxy = Client # compat for v0.1
 
 
