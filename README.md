@@ -2,6 +2,11 @@
 # Damn simple JSON-RPC client for Python
 
 ![](https://travis-ci.org/marcinn/jsonrpcproxy.svg?branch=master)
+![](https://pypip.in/download/jsonrpcproxy/badge.svg)
+![](https://pypip.in/version/jsonrpcproxy/badge.svg)
+![](https://pypip.in/py_versions/jsonrpcproxy/badge.svg)
+![](https://pypip.in/status/jsonrpcproxy/badge.svg)
+![](https://pypip.in/license/jsonrpcproxy/badge.svg)
 
 ## What is JSON-RPC
 
