@@ -1,4 +1,7 @@
+
 # Damn simple JSON-RPC client for Python
+
+![](https://travis-ci.org/marcinn/jsonrpcproxy.svg?branch=master)
 
 ## What is JSON-RPC
 
