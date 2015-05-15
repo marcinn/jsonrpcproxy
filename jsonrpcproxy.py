@@ -13,6 +13,7 @@ import requests
 import uuid
 import json
 import logging
+import re
 from requests.exceptions import RequestException as ConnectionError
 from requests.exceptions import Timeout as TimeoutError
 
@@ -23,15 +24,24 @@ __all__ = ['ServiceProxy', 'JsonRpcError', 'HttpError', 'ConnectionError',
 log = logging.getLogger(__name__)
 
 
+RE_PASSWD = re.compile('\/\/(.+):.+@')
+
+
+def hide_url_password(url):
+    return RE_PASSWD.sub('//\\1:*****@', url)
+
+
 class Client(object):
-    def __init__(self, endpoint, timeout=10):
-        self.endpoint = endpoint
-        self.timeout = timeout
+    def __init__(self, endpoint, timeout=10, strict=True):
+        self._endpoint = endpoint
+        self._printable_endpoint = hide_url_password(self._endpoint)
+        self._strict = strict
+        self._timeout = timeout
 
     def __getattr__(self, name):
         return Method(self, name)
 
-    def call(self, method, params=None):
+    def _call(self, method, params=None):
         request = {
                 'method': str(method),
                 'id': uuid.uuid4().hex,
@@ -41,9 +51,11 @@ class Client(object):
         if params:
             request['params'] = params
 
-        log.debug('Calling %s.%s() with params: %%s' % (self.endpoint, method), params)
+        log.debug('Calling %s `%s` with params: %%s' % (
+            self._printable_endpoint, method), params)
 
-        resp = requests.post(self.endpoint, data=json.dumps(request), timeout=self.timeout)
+        resp = requests.post(self._endpoint, data=json.dumps(request), timeout=self._timeout,
+                headers={'content-type': 'application/json'})
         resp_data = resp.text
 
         if not resp.status_code == 200:
@@ -57,13 +69,13 @@ class Client(object):
             raise ExpectingJSONResponse(message=unicode(e), data=resp_data)
 
         ver = data.get('jsonrpc') or ''
-        if not ver == '2.0':
+        if self._strict and not ver == '2.0':
             raise UnsupportedJsonRpcVersion(ver)
 
         if not request['id'] == data.get('id'):
             raise IdentifierMismatch
 
-        if 'error' in data:
+        if 'error' in data and data['error']:
             error = data['error']
             raise exc_factory(error['code'], error.get('message'),
                     error.get('data'))
@@ -79,7 +91,10 @@ class Method(object):
     def __call__(self, *args, **kwargs):
         if args and kwargs:
             raise ValueError('Use args or kwargs separately')
-        return self.client.call(self, args or kwargs)
+        return self.client._call(self, args or kwargs)
+
+    def __getattr__(self, name):
+        return Method(self.client, '%s.%s' % (self.name, name))
 
     def __str__(self):
         return self.name

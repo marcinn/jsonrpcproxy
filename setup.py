@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='jsonrpcproxy',
-      version='0.2',
+      version='0.3',
       description='Damn simple JSON-RPC client',
       classifiers=[
         "Development Status :: 3 - Alpha",
