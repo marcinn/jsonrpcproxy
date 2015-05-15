@@ -85,19 +85,19 @@ class Client(object):
 
 class Method(object):
     def __init__(self, client, name):
-        self.name = name
-        self.client = client
+        self._name = name
+        self._client = client
 
     def __call__(self, *args, **kwargs):
         if args and kwargs:
             raise ValueError('Use args or kwargs separately')
-        return self.client._call(self, args or kwargs)
+        return self._client._call(self, args or kwargs)
 
     def __getattr__(self, name):
-        return Method(self.client, '%s.%s' % (self.name, name))
+        return Method(self._client, '%s.%s' % (self._name, name))
 
     def __str__(self):
-        return self.name
+        return self._name
 
 
 class JsonRpcError(Exception):
